@@ -1,0 +1,225 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Soccer Query Explorer</h1>
+    <a routerLink="/my-queries" class="btn btn-outline-primary" *ngIf="userService.currentUserValue">
+      <i class="bi bi-house-door"></i> Back to My Queries
+    </a>
+  </div>
+
+  <!-- Stats Card -->
+  <div class="row mb-4" *ngIf="stats">
+    <div class="col-md-4">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <h5 class="card-title">Total Events</h5>
+          <h2>{{ stats.total_events | number }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">Matches</h5>
+          <h2>{{ stats.matches }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <h5 class="card-title">Saved Queries</h5>
+          <h2>{{ stats.total_queries }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Query List Panel -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Available Queries</h5>
+        </div>
+        <div class="card-body p-0">
+          <div *ngIf="loading && queries.length === 0" class="text-center p-4">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <div class="list-group list-group-flush">
+            <a
+              *ngFor="let query of queries"
+              href="javascript:void(0)"
+              class="list-group-item list-group-item-action"
+              [class.active]="selectedQuery?.name === query.name"
+              (click)="selectQuery(query)"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ query.name }}</h6>
+              </div>
+              <p class="mb-1 small">{{ query.description }}</p>
+              <div class="mt-2">
+                <span
+                  *ngFor="let tag of query.tags"
+                  class="badge bg-{{ getTagColor(tag) }} me-1"
+                >
+                  {{ tag }}
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Query Execution Panel -->
+    <div class="col-md-8">
+      <div class="card" *ngIf="selectedQuery">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">{{ selectedQuery.name }}</h5>
+          <div>
+            <button 
+              *ngIf="userService.currentUserValue && !isQuerySaved(selectedQuery.name)"
+              class="btn btn-sm btn-success me-2"
+              (click)="saveToCollection(selectedQuery.name)"
+            >
+              ⭐ Save to My Collection
+            </button>
+            <span 
+              *ngIf="userService.currentUserValue && isQuerySaved(selectedQuery.name)"
+              class="badge bg-success me-2"
+            >
+              ✓ Saved
+            </span>
+            <button 
+              class="btn btn-sm btn-outline-secondary"
+              (click)="togglePipeline()"
+            >
+              <span *ngIf="!showPipeline">📋 Show Pipeline</span>
+              <span *ngIf="showPipeline">✖️ Hide Pipeline</span>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">{{ selectedQuery.description }}</p>
+
+          <!-- Pipeline Details Section -->
+          <div *ngIf="showPipeline" class="alert alert-info">
+            <h6 class="alert-heading">Pipeline Definition</h6>
+            <p class="mb-2"><strong>Stages:</strong> {{ selectedQuery.pipeline?.length || 0 }}</p>
+            <p class="mb-2" *ngIf="selectedQuery.parameters && selectedQuery.parameters.length > 0">
+              <strong>Parameters:</strong> {{ selectedQuery.parameters.join(', ') }}
+            </p>
+            <p class="mb-2"><strong>Tags:</strong> 
+              <span
+                *ngFor="let tag of selectedQuery.tags"
+                class="badge bg-{{ getTagColor(tag) }} me-1"
+              >
+                {{ tag }}
+              </span>
+            </p>
+            <hr>
+            <details>
+              <summary class="mb-2" style="cursor: pointer; user-select: none;">
+                <strong>View Full Pipeline JSON</strong>
+              </summary>
+              <pre class="mt-2 p-3 bg-light border rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ selectedQuery.pipeline | json }}</code></pre>
+            </details>
+          </div>
+
+          <!-- Execution Options -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="matchSelect" class="form-label">Filter by Match (Optional)</label>
+              <select
+                id="matchSelect"
+                class="form-select"
+                [(ngModel)]="selectedMatch"
+              >
+                <option value="">All Matches</option>
+                <option *ngFor="let match of matches" [value]="match">
+                  Match {{ match }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Parameter Inputs -->
+          <div *ngIf="selectedQuery.parameters && selectedQuery.parameters.length > 0" class="mb-3">
+            <h6 class="text-muted">Query Parameters</h6>
+            <div class="row">
+              <div class="col-md-6 mb-2" *ngFor="let param of selectedQuery.parameters">
+                <label [for]="'param-' + param" class="form-label">
+                  {{ param.replace('_', ' ') | titlecase }}
+                  <small class="text-muted">(leave empty for all)</small>
+                </label>
+                <input
+                  [id]="'param-' + param"
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="parameterValues[param]"
+                  [placeholder]="'Enter ' + param.replace('_', ' ') + ' or leave empty for all'"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Execute Button -->
+          <button
+            class="btn btn-primary"
+            (click)="executeQuery()"
+            [disabled]="loading"
+          >
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            {{ loading ? 'Executing...' : 'Execute Query' }}
+          </button>
+
+          <!-- Error Message -->
+          <div *ngIf="error" class="alert alert-danger mt-3" role="alert">
+            {{ error }}
+          </div>
+
+          <!-- Results -->
+          <div *ngIf="queryResult" class="mt-4">
+            <h6>Results: {{ queryResult.count }} found</h6>
+
+            <div class="table-responsive mt-3">
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th *ngFor="let key of getResultKeys()" class="text-capitalize">
+                      {{ key.replace('_', ' ') }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let result of queryResult.results">
+                    <td *ngFor="let key of getResultKeys()">
+                      {{ formatValue(result, key) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- JSON View Toggle -->
+            <details class="mt-3">
+              <summary class="btn btn-sm btn-outline-secondary">View Raw JSON</summary>
+              <pre class="mt-2 p-3 bg-light border rounded"><code>{{ queryResult.results | json }}</code></pre>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Selection State -->
+      <div class="card" *ngIf="!selectedQuery">
+        <div class="card-body text-center text-muted py-5">
+          <h5>Select a query from the list to get started</h5>
+          <p>Choose from {{ queries.length }} available query patterns</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

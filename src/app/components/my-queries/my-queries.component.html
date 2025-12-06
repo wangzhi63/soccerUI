@@ -1,0 +1,169 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1>My Query Collection</h1>
+      <p class="text-muted" *ngIf="user">Welcome, {{ user.name }} ({{ user.email }})</p>
+    </div>
+    <div>
+      <a routerLink="/queries" class="btn btn-outline-primary me-2">
+        Browse All Queries
+      </a>
+      <button class="btn btn-outline-secondary" (click)="logout()">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="queries.length === 0 && !loading" class="alert alert-info">
+    <h5>Your collection is empty!</h5>
+    <p>Browse the <a routerLink="/queries">query library</a> and save queries to your collection.</p>
+  </div>
+
+  <div class="row">
+    <!-- Query List Panel -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Saved Queries ({{ queries.length }})</h5>
+        </div>
+        <div class="card-body p-0">
+          <div *ngIf="loading && queries.length === 0" class="text-center p-4">
+            <div class="spinner-border" role="status"></div>
+          </div>
+
+          <div class="list-group list-group-flush">
+            <div
+              *ngFor="let query of queries"
+              class="list-group-item list-group-item-action"
+              [class.active]="selectedQuery?.name === query.name"
+              style="cursor: pointer;"
+            >
+              <div (click)="selectQuery(query)">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">{{ query.name }}</h6>
+                </div>
+                <p class="mb-1 small">{{ query.description }}</p>
+                <div class="mt-2">
+                  <span
+                    *ngFor="let tag of query.tags"
+                    class="badge bg-{{ getTagColor(tag) }} me-1"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
+              <button
+                class="btn btn-sm btn-outline-danger mt-2 w-100"
+                (click)="removeQuery(query.name); $event.stopPropagation()"
+              >
+                Remove from Collection
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Query Execution Panel -->
+    <div class="col-md-8">
+      <div class="card" *ngIf="selectedQuery">
+        <div class="card-header">
+          <h5 class="mb-0">{{ selectedQuery.name }}</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">{{ selectedQuery.description }}</p>
+
+          <!-- Execution Options -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="matchSelect" class="form-label">Filter by Match (Optional)</label>
+              <select
+                id="matchSelect"
+                class="form-select"
+                [(ngModel)]="selectedMatch"
+              >
+                <option value="">All Matches</option>
+                <option *ngFor="let match of matches" [value]="match">
+                  Match {{ match }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Parameter Inputs -->
+          <div *ngIf="selectedQuery.parameters && selectedQuery.parameters.length > 0" class="mb-3">
+            <h6 class="text-muted">Query Parameters</h6>
+            <div class="row">
+              <div class="col-md-6 mb-2" *ngFor="let param of selectedQuery.parameters">
+                <label [for]="'param-' + param" class="form-label">
+                  {{ param.replace('_', ' ') | titlecase }}
+                  <small class="text-muted">(leave empty for all)</small>
+                </label>
+                <input
+                  [id]="'param-' + param"
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="parameterValues[param]"
+                  [placeholder]="'Enter ' + param.replace('_', ' ') + ' or leave empty for all'"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Execute Button -->
+          <button
+            class="btn btn-primary"
+            (click)="executeQuery()"
+            [disabled]="loading"
+          >
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            {{ loading ? 'Executing...' : 'Execute Query' }}
+          </button>
+
+          <!-- Error Message -->
+          <div *ngIf="error" class="alert alert-danger mt-3" role="alert">
+            {{ error }}
+          </div>
+
+          <!-- Results -->
+          <div *ngIf="queryResult" class="mt-4">
+            <h6>Results: {{ queryResult.count }} found</h6>
+
+            <div class="table-responsive mt-3">
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th *ngFor="let key of getResultKeys()" class="text-capitalize">
+                      {{ key.replace('_', ' ') }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let result of queryResult.results">
+                    <td *ngFor="let key of getResultKeys()">
+                      {{ formatValue(result, key) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- JSON View Toggle -->
+            <details class="mt-3">
+              <summary class="btn btn-sm btn-outline-secondary">View Raw JSON</summary>
+              <pre class="mt-2 p-3 bg-light border rounded"><code>{{ queryResult.results | json }}</code></pre>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Selection State -->
+      <div class="card" *ngIf="!selectedQuery && queries.length > 0">
+        <div class="card-body text-center text-muted py-5">
+          <h5>Select a query from your collection</h5>
+          <p>You have {{ queries.length }} saved queries</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
