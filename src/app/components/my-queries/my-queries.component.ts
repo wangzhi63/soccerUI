@@ -149,7 +149,7 @@ export class MyQueriesComponent implements OnInit {
   }
 
   getResultKeys(): string[] {
-    if (!this.queryResult || this.queryResult.results.length === 0) {
+    if (!this.queryResult || !this.queryResult.results || this.queryResult.results.length === 0) {
       return [];
     }
     return this.extractKeys(this.queryResult.results[0]).filter(key => key !== '_id');

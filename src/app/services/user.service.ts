@@ -17,7 +17,9 @@ export interface User {
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'http://localhost:5001/api';
+  private apiUrl = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5001/api'
+    : 'https://hi5z21yq40.execute-api.us-east-1.amazonaws.com/Prod/api';
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
 

@@ -57,7 +57,17 @@
               (click)="selectQuery(query)"
             >
               <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">{{ query.name }}</h6>
+                <h6 class="mb-1">
+                  {{ query.name }}
+                  <span 
+                    class="badge ms-2" 
+                    [class.bg-primary]="query.type === 'pipeline'"
+                    [class.bg-warning]="query.type === 'python'"
+                    [class.text-dark]="query.type === 'python'"
+                  >
+                    {{ query.type || 'pipeline' }}
+                  </span>
+                </h6>
               </div>
               <p class="mb-1 small">{{ query.description }}</p>
               <div class="mt-2">
@@ -78,7 +88,17 @@
     <div class="col-md-8">
       <div class="card" *ngIf="selectedQuery">
         <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">{{ selectedQuery.name }}</h5>
+          <h5 class="mb-0">
+            {{ selectedQuery.name }}
+            <span 
+              class="badge ms-2" 
+              [class.bg-primary]="selectedQuery.type === 'pipeline'"
+              [class.bg-warning]="selectedQuery.type === 'python'"
+              [class.text-dark]="selectedQuery.type === 'python'"
+            >
+              {{ selectedQuery.type || 'pipeline' }}
+            </span>
+          </h5>
           <div>
             <button 
               *ngIf="userService.currentUserValue && !isQuerySaved(selectedQuery.name)"
@@ -97,21 +117,60 @@
               class="btn btn-sm btn-outline-secondary"
               (click)="togglePipeline()"
             >
-              <span *ngIf="!showPipeline">📋 Show Pipeline</span>
-              <span *ngIf="showPipeline">✖️ Hide Pipeline</span>
+              <span *ngIf="!showPipeline && (!selectedQuery.type || selectedQuery.type === 'pipeline')">📋 Show Pipeline</span>
+              <span *ngIf="!showPipeline && selectedQuery.type === 'python'">📋 Show Details</span>
+              <span *ngIf="showPipeline">✖️ Hide Details</span>
             </button>
           </div>
         </div>
         <div class="card-body">
           <p class="text-muted">{{ selectedQuery.description }}</p>
 
-          <!-- Pipeline Details Section -->
+          <!-- Query Details Section -->
           <div *ngIf="showPipeline" class="alert alert-info">
-            <h6 class="alert-heading">Pipeline Definition</h6>
-            <p class="mb-2"><strong>Stages:</strong> {{ selectedQuery.pipeline?.length || 0 }}</p>
-            <p class="mb-2" *ngIf="selectedQuery.parameters && selectedQuery.parameters.length > 0">
-              <strong>Parameters:</strong> {{ selectedQuery.parameters.join(', ') }}
-            </p>
+            <h6 class="alert-heading">
+              <span *ngIf="!selectedQuery.type || selectedQuery.type === 'pipeline'">Pipeline Definition</span>
+              <span *ngIf="selectedQuery.type === 'python'">Python Query Details</span>
+            </h6>
+            
+            <!-- Pipeline Query Details -->
+            <div *ngIf="!selectedQuery.type || selectedQuery.type === 'pipeline'">
+              <p class="mb-2"><strong>Stages:</strong> {{ selectedQuery.pipeline?.length || 0 }}</p>
+              <p class="mb-2" *ngIf="selectedQuery.parameters && selectedQuery.parameters.length > 0">
+                <strong>Parameters:</strong> {{ selectedQuery.parameters.join(', ') }}
+              </p>
+            </div>
+            
+            <!-- Python Query Details -->
+            <div *ngIf="selectedQuery.type === 'python'">
+              <p class="mb-2">
+                <strong>Execution:</strong> 
+                <span class="badge bg-warning text-dark">AWS Lambda Function</span>
+              </p>
+              <p class="mb-2" *ngIf="selectedQuery.lambda_arn">
+                <strong>Lambda ARN:</strong><br>
+                <small class="font-monospace">{{ selectedQuery.lambda_arn }}</small>
+              </p>
+              <p class="mb-2" *ngIf="selectedQuery.parameters && selectedQuery.parameters.length > 0">
+                <strong>Parameters:</strong><br>
+                <span *ngFor="let param of selectedQuery.parameters" class="d-block ms-3">
+                  • {{ param.name }} 
+                  <span class="badge bg-secondary">{{ param.type }}</span>
+                  <span *ngIf="param.required" class="badge bg-danger">required</span>
+                  <span *ngIf="!param.required" class="badge bg-secondary">optional</span>
+                  <br>
+                  <small class="text-muted ms-2">{{ param.description }}</small>
+                </span>
+              </p>
+              <p class="mb-2" *ngIf="selectedQuery.python_code">
+                <strong>Python Code:</strong> {{ selectedQuery.python_code.length }} characters
+                <button class="btn btn-sm btn-outline-info ms-2" (click)="showCode = !showCode">
+                  {{ showCode ? 'Hide' : 'Show' }} Code
+                </button>
+              </p>
+              <pre *ngIf="showCode && selectedQuery.python_code" class="bg-dark text-light p-3 rounded mt-2" style="max-height: 400px; overflow-y: auto;"><code>{{ selectedQuery.python_code }}</code></pre>
+            </div>
+            
             <p class="mb-2"><strong>Tags:</strong> 
               <span
                 *ngFor="let tag of selectedQuery.tags"
@@ -120,8 +179,8 @@
                 {{ tag }}
               </span>
             </p>
-            <hr>
-            <details>
+            <hr *ngIf="!selectedQuery.type || selectedQuery.type === 'pipeline'">
+            <details *ngIf="!selectedQuery.type || selectedQuery.type === 'pipeline'">
               <summary class="mb-2" style="cursor: pointer; user-select: none;">
                 <strong>View Full Pipeline JSON</strong>
               </summary>
@@ -151,16 +210,16 @@
             <h6 class="text-muted">Query Parameters</h6>
             <div class="row">
               <div class="col-md-6 mb-2" *ngFor="let param of selectedQuery.parameters">
-                <label [for]="'param-' + param" class="form-label">
-                  {{ param.replace('_', ' ') | titlecase }}
-                  <small class="text-muted">(leave empty for all)</small>
+                <label [for]="'param-' + getParamName(param)" class="form-label">
+                  {{ getParamLabel(param) }}
+                  <small class="text-muted">{{ getParamRequired(param) ? '(required)' : '(optional)' }}</small>
                 </label>
                 <input
-                  [id]="'param-' + param"
-                  type="text"
+                  [id]="'param-' + getParamName(param)"
+                  [type]="getParamType(param)"
                   class="form-control"
-                  [(ngModel)]="parameterValues[param]"
-                  [placeholder]="'Enter ' + param.replace('_', ' ') + ' or leave empty for all'"
+                  [(ngModel)]="parameterValues[getParamName(param)]"
+                  [placeholder]="'Enter ' + getParamLabel(param)"
                 />
               </div>
             </div>
@@ -183,32 +242,52 @@
 
           <!-- Results -->
           <div *ngIf="queryResult" class="mt-4">
-            <h6>Results: {{ queryResult.count }} found</h6>
-
-            <div class="table-responsive mt-3">
-              <table class="table table-striped table-hover">
-                <thead>
-                  <tr>
-                    <th *ngFor="let key of getResultKeys()" class="text-capitalize">
-                      {{ key.replace('_', ' ') }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let result of queryResult.results">
-                    <td *ngFor="let key of getResultKeys()">
-                      {{ formatValue(result, key) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <!-- Python Query Mock Response -->
+            <div *ngIf="queryResult.error" class="alert alert-warning">
+              <h6><i class="bi bi-exclamation-triangle"></i> Local Development Mode</h6>
+              <p class="mb-2">{{ queryResult.error }}</p>
+              <p class="mb-0"><small>This Python query will execute in AWS Lambda when deployed.</small></p>
+              <details class="mt-2">
+                <summary style="cursor: pointer;">View Python Code ({{ queryResult.python_code?.length || 0 }} characters)</summary>
+                <pre class="mt-2 p-3 bg-dark text-light rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ queryResult.python_code }}</code></pre>
+              </details>
             </div>
 
-            <!-- JSON View Toggle -->
-            <details class="mt-3">
-              <summary class="btn btn-sm btn-outline-secondary">View Raw JSON</summary>
-              <pre class="mt-2 p-3 bg-light border rounded"><code>{{ queryResult.results | json }}</code></pre>
-            </details>
+            <!-- Regular Results (Pipeline Queries) -->
+            <div *ngIf="!queryResult.error && queryResult.result_count !== undefined">
+              <h6>Results: {{ queryResult.result_count }} found</h6>
+
+              <div class="table-responsive mt-3" *ngIf="queryResult.results && queryResult.results.length > 0">
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th *ngFor="let key of getResultKeys()" class="text-capitalize">
+                        {{ key.replace('_', ' ') }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let result of queryResult.results">
+                      <td *ngFor="let key of getResultKeys()">
+                        {{ formatValue(result, key) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- JSON View Toggle -->
+              <details class="mt-3">
+                <summary class="btn btn-sm btn-outline-secondary">View Raw JSON</summary>
+                <pre class="mt-2 p-3 bg-light border rounded"><code>{{ queryResult.results | json }}</code></pre>
+              </details>
+            </div>
+
+            <!-- Lambda Response (Python Queries in AWS) -->
+            <div *ngIf="!queryResult.error && queryResult.lambda_response">
+              <h6>Lambda Execution Result</h6>
+              <pre class="mt-2 p-3 bg-light border rounded"><code>{{ queryResult.lambda_response | json }}</code></pre>
+            </div>
           </div>
         </div>
       </div>

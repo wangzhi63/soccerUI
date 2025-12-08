@@ -18,6 +18,7 @@ export class QueryExplorerComponent implements OnInit {
   stats: any = null;
   parameterValues: { [key: string]: string } = {};
   showPipeline: boolean = false;
+  showCode: boolean = false; // For Python query code display
 
   constructor(
     private queryService: QueryService,
@@ -115,8 +116,9 @@ export class QueryExplorerComponent implements OnInit {
     if (this.selectedQuery.parameters && this.selectedQuery.parameters.length > 0) {
       options.parameters = {};
       for (const param of this.selectedQuery.parameters) {
+        const paramName = this.getParamName(param);
         // Allow empty parameters - backend will treat as wildcard
-        options.parameters[param] = this.parameterValues[param] || '';
+        options.parameters[paramName] = this.parameterValues[paramName] || '';
       }
     }
 
@@ -144,8 +146,30 @@ export class QueryExplorerComponent implements OnInit {
     return colors[tag] || 'secondary';
   }
 
+  // Helper methods for handling both string and object parameters
+  getParamName(param: any): string {
+    return typeof param === 'string' ? param : param.name;
+  }
+
+  getParamLabel(param: any): string {
+    const name = this.getParamName(param);
+    return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  getParamType(param: any): string {
+    if (typeof param === 'string') return 'text';
+    const type = param.type?.toLowerCase() || 'text';
+    if (type === 'boolean') return 'checkbox';
+    if (type === 'number' || type === 'integer') return 'number';
+    return 'text';
+  }
+
+  getParamRequired(param: any): boolean {
+    return typeof param === 'object' && param.required === true;
+  }
+
   getResultKeys(): string[] {
-    if (!this.queryResult || this.queryResult.results.length === 0) {
+    if (!this.queryResult || !this.queryResult.results || this.queryResult.results.length === 0) {
       return [];
     }
     

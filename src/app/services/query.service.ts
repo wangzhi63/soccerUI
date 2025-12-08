@@ -4,17 +4,25 @@ import { Observable } from 'rxjs';
 
 export interface QueryPattern {
   name: string;
+  type?: string; // 'pipeline' or 'python'
   description: string;
   tags: string[];
-  parameters: string[];
+  parameters: string[] | any[]; // Can be simple strings or parameter objects for python queries
   pipeline?: any[];
+  python_code?: string; // For python queries
+  lambda_arn?: string; // For python queries
   created_at?: Date;
 }
 
 export interface QueryResult {
   query_name: string;
-  count: number;
-  results: any[];
+  query_type?: string;
+  count?: number;
+  result_count?: number;
+  results?: any[];
+  error?: string;
+  python_code?: string;
+  lambda_response?: any;
 }
 
 export interface ExecuteOptions {
@@ -27,7 +35,9 @@ export interface ExecuteOptions {
   providedIn: 'root'
 })
 export class QueryService {
-  private apiUrl = 'http://localhost:5001/api';
+  private apiUrl = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5001/api'
+    : 'https://hi5z21yq40.execute-api.us-east-1.amazonaws.com/Prod/api';
 
   constructor(private http: HttpClient) { }
 
