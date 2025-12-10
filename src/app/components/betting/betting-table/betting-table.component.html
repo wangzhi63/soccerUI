@@ -1,0 +1,225 @@
+<div class="container mt-4">
+  <!-- Betting Game Navigation -->
+  <nav class="navbar navbar-expand navbar-light bg-light rounded mb-4">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h5">🎮 Betting Game</span>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/shop" routerLinkActive="fw-bold text-primary">Card Shop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/cards" routerLinkActive="fw-bold text-primary">My Cards</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" routerLink="/betting/tables" routerLinkActive="fw-bold text-primary">Betting Tables</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/wallet" routerLinkActive="fw-bold text-primary">My Wallet</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/leaderboard" routerLinkActive="fw-bold text-primary">Leaderboard</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Betting Tables</h2>
+    <button class="btn btn-success" (click)="showCreateForm = !showCreateForm">
+      {{ showCreateForm ? 'Cancel' : '+ Create Betting Table' }}
+    </button>
+  </div>
+  <p class="text-muted">Place bets on matches using your cards</p>
+
+  <!-- Create Table Form -->
+  <div class="card mb-4" *ngIf="showCreateForm">
+    <div class="card-header">
+      <h5 class="mb-0">Create New Betting Table</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="matchSelect" class="form-label">Select Match *</label>
+          <select
+            id="matchSelect"
+            class="form-select"
+            [(ngModel)]="newTableMatchId"
+          >
+            <option value="">Choose a match...</option>
+            <option *ngFor="let match of matches" [value]="match">
+              Match {{ match }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="matchName" class="form-label">Match Name (Optional)</label>
+          <input
+            id="matchName"
+            type="text"
+            class="form-control"
+            [(ngModel)]="newTableMatchName"
+            placeholder="e.g., Barcelona vs Real Madrid"
+          />
+        </div>
+      </div>
+      <button
+        class="btn btn-primary"
+        (click)="createBettingTable()"
+        [disabled]="!newTableMatchId || loading"
+      >
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        Create Table
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success alert-dismissible fade show" role="alert" *ngIf="successMessage">
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = null"></button>
+  </div>
+  
+  <div class="alert alert-danger alert-dismissible fade show" role="alert" *ngIf="error">
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null"></button>
+  </div>
+
+  <!-- Loading -->
+  <div class="text-center my-5" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="!loading">
+    <!-- Available Tables -->
+    <div class="col-md-6">
+      <h3>Available Matches</h3>
+      <div class="list-group mb-4">
+        <div
+          class="list-group-item"
+          *ngFor="let table of bettingTables">
+          <div 
+            style="cursor: pointer;"
+            [class.bg-light]="selectedTable?.tableId === table.tableId"
+            (click)="selectTable(table)">
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1">{{ table.matchName || 'Match ' + table.matchId }}</h5>
+              <span class="badge" [style.background-color]="getStatusColor(table.status)">
+                {{ table.status }}
+              </span>
+            </div>
+            <p class="mb-1">Opened: {{ formatDate(table.openedAt) }}</p>
+            <p class="mb-1 small text-muted">Bets: {{ table.totalBetsPlaced }} | Chips: {{ table.totalChipsWagered }}</p>
+          </div>
+          <button 
+            *ngIf="table.status === 'open'"
+            class="btn btn-warning btn-sm w-100 mt-2"
+            (click)="settleTable(table.tableId); $event.stopPropagation()"
+            [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            🎲 Settle Bets (Execute Queries)
+          </button>
+          <div *ngIf="table.status === 'settled'" class="alert alert-success mt-2 mb-0 py-1 small">
+            ✅ Settled at {{ formatDate(table.settledAt!) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="text-center my-5" *ngIf="bettingTables.length === 0">
+        <p class="text-muted">No betting tables available.</p>
+      </div>
+    </div>
+
+    <!-- Place Bet Form -->
+    <div class="col-md-6" *ngIf="selectedTable">
+      <h3>Place Bet</h3>
+      <div class="card">
+        <div class="card-body">
+          <h5>Match {{ selectedTable.matchId }}</h5>
+          
+          <!-- Card Selection -->
+          <div class="mb-3">
+            <label class="form-label">Select Card</label>
+            <select class="form-select" [(ngModel)]="selectedCard">
+              <option [ngValue]="null">Choose a card...</option>
+              <option *ngFor="let card of userCards" [ngValue]="card">
+                {{ card.cardName }} (×{{ card.quantity }}) - {{ card.baseMultiplier }}x multiplier
+              </option>
+            </select>
+          </div>
+
+          <!-- Wager Amount -->
+          <div class="mb-3">
+            <label class="form-label">Wager Amount (chips)</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              [(ngModel)]="wagerAmount"
+              min="1"
+              placeholder="Enter wager amount">
+          </div>
+
+          <!-- Potential Payout -->
+          <div class="alert alert-info" *ngIf="selectedCard && wagerAmount">
+            <strong>Potential Payout:</strong> {{ potentialPayout }} chips
+            <br>
+            <small>(Wager: {{ wagerAmount }} × Multiplier: {{ selectedCard.baseMultiplier }}x)</small>
+          </div>
+
+          <!-- Place Bet Button -->
+          <button 
+            class="btn btn-primary w-100"
+            (click)="placeBet()"
+            [disabled]="!selectedCard || !wagerAmount || loading">
+            Place Bet
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Active Bets -->
+  <div class="mt-5" *ngIf="myBets.length > 0">
+    <h3>My Bets</h3>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Match</th>
+            <th>Card</th>
+            <th>Wager</th>
+            <th>Potential/Actual Payout</th>
+            <th>Status</th>
+            <th>Placed At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let bet of myBets" [class.table-success]="bet.status === 'won'" [class.table-danger]="bet.status === 'lost'">
+            <td>{{ bet.table?.matchName || bet.table?.matchId || 'N/A' }}</td>
+            <td>
+              <strong>{{ bet.card?.name || 'N/A' }}</strong>
+              <br>
+              <small class="text-muted">{{ bet.card?.queryName }}</small>
+            </td>
+            <td>{{ bet.wagerAmount }} chips</td>
+            <td>
+              <span *ngIf="bet.status === 'pending'">{{ bet.potentialPayout }} chips (potential)</span>
+              <span *ngIf="bet.status === 'won'" class="text-success"><strong>{{ bet.actualPayout }} chips</strong></span>
+              <span *ngIf="bet.status === 'lost'" class="text-muted">0 chips</span>
+              <span *ngIf="bet.status === 'cancelled'" class="text-muted">0 chips</span>
+            </td>
+            <td>
+              <span *ngIf="bet.status" class="badge" [style.background-color]="getStatusColor(bet.status)">
+                {{ bet.status.toUpperCase() }}
+              </span>
+              <span *ngIf="!bet.status" class="badge bg-secondary">UNKNOWN</span>
+            </td>
+            <td>{{ formatDate(bet.placedAt) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,9 +1,25 @@
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="mb-0">Soccer Query Explorer</h1>
-    <a routerLink="/my-queries" class="btn btn-outline-primary" *ngIf="userService.currentUserValue">
-      <i class="bi bi-house-door"></i> Back to My Queries
-    </a>
+    <div>
+      <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+          Betting Game
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" routerLink="/betting/login"><strong>🎮 Login/Register</strong></a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" routerLink="/betting/shop">Card Shop</a></li>
+          <li><a class="dropdown-item" routerLink="/betting/wallet">My Wallet</a></li>
+          <li><a class="dropdown-item" routerLink="/betting/cards">My Cards</a></li>
+          <li><a class="dropdown-item" routerLink="/betting/tables">Betting Tables</a></li>
+          <li><a class="dropdown-item" routerLink="/betting/leaderboard">Leaderboard</a></li>
+        </ul>
+      </div>
+      <a routerLink="/my-queries" class="btn btn-outline-primary" *ngIf="userService.currentUserValue">
+        <i class="bi bi-house-door"></i> Back to My Queries
+      </a>
+    </div>
   </div>
 
   <!-- Stats Card -->

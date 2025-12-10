@@ -1,0 +1,104 @@
+<div class="container mt-4">
+  <!-- Betting Game Navigation -->
+  <nav class="navbar navbar-expand navbar-light bg-light rounded mb-4">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h5">🎮 Betting Game</span>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/shop" routerLinkActive="fw-bold text-primary">Card Shop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/cards" routerLinkActive="fw-bold text-primary">My Cards</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/tables" routerLinkActive="fw-bold text-primary">Betting Tables</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" routerLink="/betting/wallet" routerLinkActive="fw-bold text-primary">My Wallet</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/leaderboard" routerLinkActive="fw-bold text-primary">Leaderboard</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <h2>My Wallet</h2>
+  <p class="text-muted">View your balance and transaction history</p>
+
+  <!-- Balance Card -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body text-center">
+          <h5 class="card-title">Current Balance</h5>
+          <h1 class="text-primary" *ngIf="walletBalance">{{ walletBalance.chipBalance }}</h1>
+          <div class="spinner-border text-primary" role="status" *ngIf="!walletBalance">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-muted">chips</p>
+          <small class="text-muted" *ngIf="walletBalance">
+            Last updated: {{ formatDate(walletBalance.updatedAt) }}
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div class="alert alert-danger" role="alert" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Transaction History -->
+  <h3 class="mb-3">Transaction History</h3>
+
+  <!-- Loading -->
+  <div class="text-center my-5" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading transactions...</p>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="table-responsive" *ngIf="!loading">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th class="text-end">Amount</th>
+          <th class="text-end">Balance After</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let transaction of transactions" [ngClass]="getTransactionClass(transaction.type)">
+          <td>{{ formatDate(transaction.createdAt) }}</td>
+          <td>
+            <span class="badge" [class.bg-success]="['deposit', 'bet_won'].includes(transaction.type)"
+                  [class.bg-warning]="transaction.type === 'bet_placed'"
+                  [class.bg-info]="transaction.type === 'card_purchase'"
+                  [class.bg-danger]="transaction.type === 'bet_lost'">
+              {{ transaction.type.replace('_', ' ').toUpperCase() }}
+            </span>
+          </td>
+          <td>{{ transaction.description }}</td>
+          <td class="text-end">
+            <span [class.text-success]="transaction.amount > 0"
+                  [class.text-danger]="transaction.amount < 0">
+              {{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount }}
+            </span>
+          </td>
+          <td class="text-end"><strong>{{ transaction.balanceAfter }}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div class="text-center my-5" *ngIf="transactions.length === 0">
+      <p class="text-muted">No transactions yet.</p>
+    </div>
+  </div>
+</div>

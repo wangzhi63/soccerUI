@@ -1,0 +1,107 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header text-center">
+          <h3>{{ isLoginMode ? 'Betting Game Login' : 'Create Betting Account' }}</h3>
+        </div>
+        <div class="card-body">
+          <!-- Alerts -->
+          <div class="alert alert-success" *ngIf="successMessage">
+            {{ successMessage }}
+          </div>
+          <div class="alert alert-danger" *ngIf="error">
+            {{ error }}
+          </div>
+
+          <form (ngSubmit)="onSubmit()">
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                [(ngModel)]="email"
+                name="email"
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+
+            <!-- Username (Register only) -->
+            <div class="mb-3" *ngIf="!isLoginMode">
+              <label for="username" class="form-label">Username</label>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                [(ngModel)]="username"
+                name="username"
+                required
+                placeholder="Choose a username"
+              />
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                [(ngModel)]="password"
+                name="password"
+                required
+                placeholder="Enter your password"
+              />
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              class="btn btn-primary w-100"
+              [disabled]="loading || !email || !password || (!isLoginMode && !username)"
+            >
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              {{ loading ? 'Please wait...' : (isLoginMode ? 'Login' : 'Register') }}
+            </button>
+          </form>
+
+          <!-- Toggle Mode -->
+          <div class="text-center mt-3">
+            <p class="mb-0">
+              {{ isLoginMode ? "Don't have an account?" : "Already have an account?" }}
+              <a href="javascript:void(0)" (click)="toggleMode()" class="text-decoration-none">
+                {{ isLoginMode ? 'Register here' : 'Login here' }}
+              </a>
+            </p>
+          </div>
+
+          <!-- Demo Credentials -->
+          <div class="alert alert-info mt-3 mb-0" *ngIf="isLoginMode">
+            <small>
+              <strong>Demo Account:</strong><br>
+              Email: demo@example.com<br>
+              Password: demo123
+            </small>
+          </div>
+
+          <!-- Registration Info -->
+          <div class="alert alert-success mt-3 mb-0" *ngIf="!isLoginMode">
+            <small>
+              <strong>New players receive 1000 chips!</strong>
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back to Queries -->
+      <div class="text-center mt-3">
+        <a routerLink="/my-queries" class="text-decoration-none">
+          ← Back to Query Explorer
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,99 @@
+<div class="container mt-4">
+  <!-- Betting Game Navigation -->
+  <nav class="navbar navbar-expand navbar-light bg-light rounded mb-4">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h5">🎮 Betting Game</span>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/shop" routerLinkActive="fw-bold text-primary">Card Shop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" routerLink="/betting/cards" routerLinkActive="fw-bold text-primary">My Cards</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/tables" routerLinkActive="fw-bold text-primary">Betting Tables</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/wallet" routerLinkActive="fw-bold text-primary">My Wallet</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/betting/leaderboard" routerLinkActive="fw-bold text-primary">Leaderboard</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h2>My Cards</h2>
+      <p class="text-muted">Your card inventory for placing bets</p>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Total Cards</h5>
+          <h3 class="text-primary">{{ totalCards }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div class="alert alert-danger" role="alert" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Filter -->
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <select class="form-select" [(ngModel)]="filterRarity">
+        <option value="all">All Rarities</option>
+        <option value="common">Common</option>
+        <option value="rare">Rare</option>
+        <option value="epic">Epic</option>
+        <option value="legendary">Legendary</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="text-center my-5" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading your cards...</p>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="row" *ngIf="!loading">
+    <div class="col-md-4 mb-4" *ngFor="let card of filteredCards">
+      <div class="card h-100">
+        <div class="card-header" [style.background-color]="getRarityColor(card.rarity)" style="color: white;">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">{{ card.cardName }}</h5>
+            <span class="badge bg-light text-dark fs-6">×{{ card.quantity }}</span>
+          </div>
+          <span class="badge bg-light text-dark mt-1">{{ card.rarity }}</span>
+        </div>
+        <div class="card-body">
+          <p class="card-text">{{ card.description }}</p>
+          <ul class="list-unstyled">
+            <li><strong>Multiplier:</strong> {{ card.baseMultiplier }}x</li>
+            <li><strong>Query:</strong> {{ card.queryName }}</li>
+            <li><strong>Original Cost:</strong> {{ card.chipCost }} chips</li>
+            <li><strong>Acquired:</strong> {{ formatDate(card.acquiredAt) }}</li>
+          </ul>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted">{{ card.description }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="text-center my-5" *ngIf="!loading && cards.length === 0">
+    <p class="text-muted">You don't have any cards yet.</p>
+    <a routerLink="/betting/shop" class="btn btn-primary">Visit Card Shop</a>
+  </div>
+</div>
