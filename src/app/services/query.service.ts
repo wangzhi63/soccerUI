@@ -35,9 +35,8 @@ export interface ExecuteOptions {
   providedIn: 'root'
 })
 export class QueryService {
-  private apiUrl = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5001/api'
-    : 'https://hi5z21yq40.execute-api.us-east-1.amazonaws.com/Prod/api';
+  // Always use Lambda endpoint (use ng serve with proxy for local development)
+  private apiUrl = 'https://hi5z21yq40.execute-api.us-east-1.amazonaws.com/Prod/api';
 
   constructor(private http: HttpClient) { }
 
