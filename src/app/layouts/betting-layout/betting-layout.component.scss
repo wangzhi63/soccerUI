@@ -1,0 +1,269 @@
+.betting-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  padding-bottom: env(safe-area-inset-bottom); // iOS safe area
+}
+
+// Desktop/Tablet Navigation
+.betting-nav.desktop-nav {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 4px solid #3b82f6;
+
+  @media (max-width: 768px) {
+    display: none; // Hide completely on mobile
+  }
+}
+
+// Mobile Header (hidden on desktop)
+.mobile-header {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+}
+
+.nav-brand {
+  h2 {
+    margin: 0;
+    color: #1e3a8a;
+    font-size: 1.8rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+
+  a {
+    color: #4b5563;
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+
+    &:hover {
+      background: #dbeafe;
+      color: #1e40af;
+      border-color: #3b82f6;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+  }
+
+  .btn-logout {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 1rem;
+
+    &:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.betting-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
+}
+
+// Mobile Bottom Navigation (hidden on desktop)
+.mobile-bottom-nav {
+  display: none;
+}
+
+.betting-footer {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 2rem;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+
+  small {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+
+    .admin-link {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+    }
+  }
+}
+
+// Tablet optimizations
+@media (max-width: 1024px) {
+  .nav-links {
+    gap: 0.5rem;
+
+    a {
+      padding: 0.5rem 0.8rem;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  // Show mobile header
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.98);
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid #3b82f6;
+
+    h2 {
+      margin: 0;
+      color: #1e3a8a;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+
+    .btn-logout-mobile {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.5rem 0.8rem;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: #dc2626;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+
+  // Show mobile bottom navigation
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    border-top: 2px solid #3b82f6;
+    padding: 0.5rem 0;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); // iOS safe area
+    z-index: 1000;
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      text-decoration: none;
+      color: #6b7280;
+      transition: all 0.3s ease;
+      min-height: 60px; // Touch-friendly height
+      position: relative;
+
+      .icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+        transition: transform 0.3s ease;
+      }
+
+      .label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &.active {
+        color: #1e40af;
+
+        .icon {
+          transform: scale(1.2);
+        }
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 40px;
+          height: 3px;
+          background: linear-gradient(90deg, #3b82f6, #2563eb);
+          border-radius: 0 0 3px 3px;
+        }
+      }
+
+      &:hover:not(.active) {
+        color: #3b82f6;
+      }
+    }
+  }
+
+  .betting-content {
+    padding: 1rem;
+    padding-bottom: 80px; // Space for bottom nav
+  }
+
+  .betting-footer {
+    display: none; // Hide admin link on mobile to reduce clutter
+  }
+}

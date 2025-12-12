@@ -10,17 +10,44 @@ import { BettingTableComponent } from './components/betting/betting-table/bettin
 import { LeaderboardComponent } from './components/betting/leaderboard/leaderboard.component';
 import { BettingLoginComponent } from './components/betting/betting-login/betting-login.component';
 
+import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
+import { BettingLayoutComponent } from './layouts/betting-layout/betting-layout.component';
+
 const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'queries', component: QueryExplorerComponent },
-  { path: 'my-queries', component: MyQueriesComponent },
-  { path: 'betting/login', component: BettingLoginComponent },
-  { path: 'betting/shop', component: CardShopComponent },
-  { path: 'betting/wallet', component: WalletComponent },
-  { path: 'betting/cards', component: MyCardsComponent },
-  { path: 'betting/tables', component: BettingTableComponent },
-  { path: 'betting/leaderboard', component: LeaderboardComponent }
+  // Default route - redirect to betting for regular users
+  { path: '', redirectTo: '/betting/login', pathMatch: 'full' },
+  
+  // Admin section - wrapped in admin layout
+  { 
+    path: 'admin', 
+    component: AdminLayoutComponent,
+    children: [
+      { path: '', redirectTo: 'login', pathMatch: 'full' },
+      { path: 'login', component: LoginComponent },
+      { path: 'queries', component: QueryExplorerComponent },
+      { path: 'my-queries', component: MyQueriesComponent }
+    ]
+  },
+  
+  // Betting section - wrapped in betting layout
+  { 
+    path: 'betting', 
+    component: BettingLayoutComponent,
+    children: [
+      { path: '', redirectTo: 'login', pathMatch: 'full' },
+      { path: 'login', component: BettingLoginComponent },
+      { path: 'shop', component: CardShopComponent },
+      { path: 'wallet', component: WalletComponent },
+      { path: 'cards', component: MyCardsComponent },
+      { path: 'tables', component: BettingTableComponent },
+      { path: 'leaderboard', component: LeaderboardComponent }
+    ]
+  },
+  
+  // Legacy routes - redirect to new structure
+  { path: 'login', redirectTo: '/admin/login', pathMatch: 'full' },
+  { path: 'queries', redirectTo: '/admin/queries', pathMatch: 'full' },
+  { path: 'my-queries', redirectTo: '/admin/my-queries', pathMatch: 'full' }
 ];
 
 @NgModule({

@@ -39,8 +39,8 @@ export class BettingTableComponent implements OnInit {
   }
 
   loadMatches(): void {
-    // Load available matches from Flask API
-    this.bettingService.http.get<string[]>('http://localhost:5001/api/matches').subscribe({
+    // Load available matches from Flask API Lambda endpoint
+    this.bettingService.http.get<string[]>('https://hi5z21yq40.execute-api.us-east-1.amazonaws.com/Prod/api/matches').subscribe({
       next: (matches) => {
         this.matches = matches;
       },

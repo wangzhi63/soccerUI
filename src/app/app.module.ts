@@ -14,6 +14,8 @@ import { MyCardsComponent } from './components/betting/my-cards/my-cards.compone
 import { BettingTableComponent } from './components/betting/betting-table/betting-table.component';
 import { LeaderboardComponent } from './components/betting/leaderboard/leaderboard.component';
 import { BettingLoginComponent } from './components/betting/betting-login/betting-login.component';
+import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
+import { BettingLayoutComponent } from './layouts/betting-layout/betting-layout.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +28,9 @@ import { BettingLoginComponent } from './components/betting/betting-login/bettin
     MyCardsComponent,
     BettingTableComponent,
     LeaderboardComponent,
-    BettingLoginComponent
+    BettingLoginComponent,
+    AdminLayoutComponent,
+    BettingLayoutComponent
   ],
   imports: [
     BrowserModule,

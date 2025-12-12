@@ -1,0 +1,54 @@
+<div class="betting-container">
+  <!-- Desktop/Tablet Navigation -->
+  <nav class="betting-nav desktop-nav">
+    <div class="nav-brand">
+      <h2>🎲 Soccer Betting Game</h2>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/betting/shop" routerLinkActive="active">Card Shop</a>
+      <a routerLink="/betting/cards" routerLinkActive="active">My Cards</a>
+      <a routerLink="/betting/tables" routerLinkActive="active">Betting Tables</a>
+      <a routerLink="/betting/wallet" routerLinkActive="active">Wallet</a>
+      <a routerLink="/betting/leaderboard" routerLinkActive="active">Leaderboard</a>
+      <button (click)="logout()" class="btn-logout">🚪 Logout</button>
+    </div>
+  </nav>
+
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <h2>🎲 Betting</h2>
+    <button (click)="logout()" class="btn-logout-mobile">🚪</button>
+  </header>
+
+  <main class="betting-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/betting/shop" routerLinkActive="active" class="nav-item">
+      <span class="icon">🛒</span>
+      <span class="label">Shop</span>
+    </a>
+    <a routerLink="/betting/cards" routerLinkActive="active" class="nav-item">
+      <span class="icon">🎴</span>
+      <span class="label">Cards</span>
+    </a>
+    <a routerLink="/betting/tables" routerLinkActive="active" class="nav-item">
+      <span class="icon">🎯</span>
+      <span class="label">Tables</span>
+    </a>
+    <a routerLink="/betting/wallet" routerLinkActive="active" class="nav-item">
+      <span class="icon">💰</span>
+      <span class="label">Wallet</span>
+    </a>
+    <a routerLink="/betting/leaderboard" routerLinkActive="active" class="nav-item">
+      <span class="icon">🏆</span>
+      <span class="label">Board</span>
+    </a>
+  </nav>
+
+  <footer class="betting-footer">
+    <small><a routerLink="/admin/login" class="admin-link">Admin Access</a></small>
+  </footer>
+</div>
