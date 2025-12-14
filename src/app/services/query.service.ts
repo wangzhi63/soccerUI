@@ -31,12 +31,28 @@ export interface ExecuteOptions {
   limit?: number;
 }
 
+export interface NaturalQueryResult {
+  query: string;
+  explanation: string;
+  confidence: number;
+  pipeline: any[];
+  results?: any[];
+  count?: number;
+  mock?: boolean;
+  error?: string;
+  execution_error?: string;
+  similar_queries?: { name: string; description: string; tags: string[] }[];
+  saved_as?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class QueryService {
-  // Always use Lambda endpoint (use ng serve with proxy for local development)
-  private apiUrl = 'https://hi5z21yq40.execute-api.us-east-1.amazonaws.com/Prod/api';
+  // Use localhost for development, Lambda for production
+  private apiUrl = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5001/api'
+    : 'https://hi5z21yq40.execute-api.us-east-1.amazonaws.com/Prod/api';
 
   constructor(private http: HttpClient) { }
 
@@ -77,5 +93,52 @@ export class QueryService {
    */
   getStats(): Observable<any> {
     return this.http.get(`${this.apiUrl}/stats`);
+  }
+
+  /**
+   * Execute natural language query
+   */
+  naturalQuery(query: string, options: { matchId?: string, execute?: boolean, limit?: number } = {}): Observable<NaturalQueryResult> {
+    return this.http.post<NaturalQueryResult>(`${this.apiUrl}/queries/natural`, {
+      query: query,
+      match_id: options.matchId,
+      execute: options.execute !== false,
+      limit: options.limit || 100
+    });
+  }
+
+  /**
+   * Save a query pattern
+   */
+  saveQuery(query: { name: string; description: string; pipeline: any[]; tags?: string[] }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/queries`, query);
+  }
+
+  /**
+   * Search for similar queries
+   */
+  searchQueries(query: string): Observable<{ matches: QueryPattern[]; count: number }> {
+    return this.http.post<{ matches: QueryPattern[]; count: number }>(`${this.apiUrl}/queries/search`, { query });
+  }
+
+  /**
+   * Save a manually entered pipeline query
+   */
+  saveManualQuery(data: { 
+    description: string; 
+    pipeline: any[]; 
+    execute?: boolean;
+    based_on?: string;
+    tags?: string[];
+    name?: string;
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/queries/manual`, data);
+  }
+
+  /**
+   * Delete a query by name
+   */
+  deleteQuery(name: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/queries/${name}`);
   }
 }

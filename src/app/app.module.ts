@@ -16,6 +16,7 @@ import { LeaderboardComponent } from './components/betting/leaderboard/leaderboa
 import { BettingLoginComponent } from './components/betting/betting-login/betting-login.component';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { BettingLayoutComponent } from './layouts/betting-layout/betting-layout.component';
+import { NaturalQueryComponent } from './components/natural-query/natural-query.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { BettingLayoutComponent } from './layouts/betting-layout/betting-layout.
     LeaderboardComponent,
     BettingLoginComponent,
     AdminLayoutComponent,
-    BettingLayoutComponent
+    BettingLayoutComponent,
+    NaturalQueryComponent
   ],
   imports: [
     BrowserModule,

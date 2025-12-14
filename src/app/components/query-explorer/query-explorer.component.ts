@@ -237,6 +237,32 @@ export class QueryExplorerComponent implements OnInit {
     });
   }
 
+  deleteQuery(queryName: string): void {
+    if (!confirm(`Are you sure you want to delete query "${queryName}"?`)) {
+      return;
+    }
+
+    this.loading = true;
+    this.queryService.deleteQuery(queryName).subscribe({
+      next: () => {
+        alert(`Query "${queryName}" deleted successfully!`);
+        // Clear selected query if it was the deleted one
+        if (this.selectedQuery?.name === queryName) {
+          this.selectedQuery = null;
+          this.queryResult = null;
+        }
+        // Reload the queries list
+        this.loadQueries();
+        this.loadStats(); // Update stats as well
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err.error?.error || 'Failed to delete query';
+        alert('Error: ' + this.error);
+      }
+    });
+  }
+
   isQuerySaved(queryName: string): boolean {
     return this.userService.isQuerySaved(queryName);
   }

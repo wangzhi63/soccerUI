@@ -1,0 +1,370 @@
+<div class="natural-query-container">
+  <div class="header">
+    <h2>🔍 Natural Language Query</h2>
+    <p class="subtitle">Ask questions in plain English about soccer events</p>
+  </div>
+  
+  <div class="query-input-section">
+    <div class="input-wrapper">
+      <input 
+        type="text" 
+        [(ngModel)]="userQuery" 
+        placeholder="e.g., Show me all goals by Messi with his left foot"
+        (keyup.enter)="executeQuery()"
+        [disabled]="loading"
+        class="query-input"
+      />
+      <button 
+        (click)="executeQuery()" 
+        [disabled]="loading || !userQuery.trim()"
+        class="search-button"
+      >
+        <span *ngIf="!loading">🔍 Search</span>
+        <span *ngIf="loading">⏳ Searching...</span>
+      </button>
+    </div>
+  </div>
+  
+  <div class="examples-section">
+    <p class="examples-title">Try these examples:</p>
+    <div class="examples-grid">
+      <button 
+        *ngFor="let example of examples" 
+        (click)="useExample(example)"
+        [disabled]="loading"
+        class="example-button"
+      >
+        {{ example }}
+      </button>
+    </div>
+  </div>
+  
+  <div *ngIf="error && !result" class="error-banner">
+    ❌ {{ error }}
+  </div>
+  
+  <div *ngIf="result" class="results-container">
+    <!-- Similar Queries Warning -->
+    <div *ngIf="result.similar_queries && result.similar_queries.length > 0" class="similar-queries-banner">
+      <div class="similar-header">
+        💡 <strong>Found {{ result.similar_queries.length }} similar saved {{ result.similar_queries.length === 1 ? 'query' : 'queries' }}:</strong>
+      </div>
+      <div class="similar-list">
+        <button 
+          *ngFor="let sq of result.similar_queries" 
+          (click)="useSimilarQuery(sq.name)"
+          class="similar-query-btn"
+          title="Click to use this query"
+        >
+          <strong>{{ sq.name }}</strong>
+          <span class="similar-desc">{{ sq.description }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="explanation-card">
+      <div class="explanation-header">
+        <h3>💡 Query Understanding</h3>
+        <div class="header-actions">
+          <button (click)="openSaveDialog()" class="save-query-btn" title="Save this query for later use">
+            💾 Save Query
+          </button>
+          <button 
+            *ngIf="result.saved_as" 
+            (click)="deleteQuery()" 
+            class="delete-query-btn" 
+            title="Delete this saved query"
+          >
+            🗑️ Delete
+          </button>
+          <div class="confidence-badge" [style.background-color]="getConfidenceColor(result.confidence || 0)">
+            {{ ((result.confidence || 0) * 100) | number:'1.0-0' }}% confident
+          </div>
+        </div>
+      </div>
+      <p class="explanation-text">{{ result.explanation }}</p>
+      
+      <!-- Query Refinement Section -->
+      <div class="refine-section">
+        <div class="refine-header">
+          <strong>💡 Not what you expected?</strong>
+          <button class="toggle-refine-btn" (click)="toggleRefineForm()">
+            {{ showRefineForm ? 'Cancel' : 'Refine query' }}
+          </button>
+        </div>
+        
+        <div *ngIf="showRefineForm" class="refine-form">
+          <div class="form-group">
+            <label>Edit Query:</label>
+            <input 
+              [(ngModel)]="userQuery" 
+              placeholder="Modify your query..."
+              class="hint-input"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label>Add Context/Hint (optional):</label>
+            <textarea 
+              [(ngModel)]="refinementHint" 
+              placeholder="Help improve the query by adding context..."
+              class="hint-input"
+              rows="3"
+            ></textarea>
+          </div>
+          
+          <div class="refine-actions">
+            <button 
+              (click)="refineQuery()" 
+              [disabled]="loading"
+              class="refine-btn"
+            >
+              🔄 Refine Query
+            </button>
+          </div>
+          
+          <div class="hint-examples">
+            <strong>Examples of helpful hints:</strong>
+            <ul>
+              <li>"Dribble means dribbling past an opponent, not just carrying the ball"</li>
+              <li>"Led to goals means the dribble event should be followed by a shot that scored"</li>
+              <li>"First half means minutes 0-45, not just minute 1"</li>
+              <li>"Saved penalty means the shot outcome is 'Saved', not 'Off T' or 'Post'"</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <button (click)="togglePipeline()" class="toggle-pipeline-btn">
+        {{ showPipeline ? '▼ Hide' : '▶ Show' }} MongoDB Pipeline
+      </button>
+      
+      <div *ngIf="showPipeline" class="pipeline-display">
+        <div class="pipeline-actions">
+          <button (click)="toggleManualEntry()" class="edit-pipeline-btn">
+            ✏️ {{ showManualEntry ? 'Cancel Edit' : 'Edit / Correct Pipeline' }}
+          </button>
+        </div>
+        <pre>{{ result.pipeline | json }}</pre>
+      </div>
+      
+      <!-- Manual Pipeline Entry Form -->
+      <div *ngIf="showManualEntry" class="manual-entry-section">
+        <div class="manual-entry-header">
+          <h4>✏️ Manual Pipeline Entry</h4>
+          <p class="subtitle">Correct the LLM-generated pipeline or enter your own MongoDB aggregation pipeline</p>
+        </div>
+        
+        <div class="form-group">
+          <label>Description *</label>
+          <input 
+            [(ngModel)]="manualDescription" 
+            placeholder="What does this pipeline do?"
+            class="form-input"
+          />
+        </div>
+        
+        <div class="form-group">
+          <label>Pipeline JSON *</label>
+          <textarea 
+            [(ngModel)]="manualPipeline" 
+            placeholder='[{"$match": {"type.name": "Pass"}}, {"$limit": 10}]'
+            class="pipeline-textarea"
+            rows="12"
+          ></textarea>
+          <small>Enter a valid MongoDB aggregation pipeline as JSON array</small>
+        </div>
+        
+        <div class="form-group">
+          <label>Based On (optional)</label>
+          <input 
+            [(ngModel)]="manualBasedOn" 
+            placeholder="e.g., nl_abc123 (original query name)"
+            class="form-input"
+          />
+          <small>Link this correction to the original LLM-generated query</small>
+        </div>
+        
+        <div *ngIf="manualError" class="error-message">
+          {{ manualError }}
+        </div>
+        
+        <div *ngIf="manualTestResults" class="test-results">
+          <h5>✅ Pipeline Test Results:</h5>
+          <div class="results-summary">
+            <strong>Result Count:</strong> {{ manualTestResults.result_count }}
+          </div>
+          <div *ngIf="manualTestResults.execution_metadata?.sample_results" class="sample-results">
+            <strong>Sample Results:</strong>
+            <pre>{{ manualTestResults.execution_metadata.sample_results | json }}</pre>
+          </div>
+          <div *ngIf="manualTestResults.validation_warnings && manualTestResults.validation_warnings.length > 0" class="warnings">
+            <strong>Validation Warnings:</strong>
+            <ul>
+              <li *ngFor="let warning of manualTestResults.validation_warnings">
+                {{ warning.message }}
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="manual-entry-actions">
+          <button (click)="testManualPipeline()" [disabled]="loading" class="test-btn">
+            🧪 Test Pipeline
+          </button>
+          <button (click)="saveManualQuery()" [disabled]="loading" class="save-manual-btn">
+            💾 Save Query
+          </button>
+          <button (click)="copyCurrentPipeline()" class="copy-btn" *ngIf="result">
+            📋 Copy Current Pipeline
+          </button>
+        </div>
+      </div>
+      
+      <div *ngIf="result.mock" class="mock-warning">
+        ⚠️ Mock mode: LLM not configured. Using pattern matching.
+      </div>
+    </div>
+    
+    <div class="data-section">
+      <div class="data-header">
+        <h3>📊 Results</h3>
+        <span class="result-count">{{ result.count || 0 }} results</span>
+      </div>
+      
+      <div *ngIf="result.error || result.execution_error" class="error-message">
+        ❌ {{ result.error || result.execution_error }}
+      </div>
+      
+      <div *ngIf="result.results && result.results.length > 0" class="table-container">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th *ngFor="let col of getColumns(result.results[0])">{{ col }}</th>
+              <th class="actions-column">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of result.results; let i = index" [class.even]="i % 2 === 0">
+              <td *ngFor="let col of getColumns(row)">{{ formatValue(row[col]) }}</td>
+              <td class="actions-cell">
+                <button class="view-detail-btn" (click)="viewEventDetail(row)" title="View full event details">
+                  🔍 View
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div *ngIf="result.results && result.results.length === 0" class="no-results">
+        <p>No results found for your query.</p>
+        <p class="hint">Try different keywords or check the example queries above.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Save Query Dialog -->
+<div *ngIf="showSaveDialog" class="modal-overlay" (click)="closeSaveDialog()">
+  <div class="save-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>💾 Save Query</h3>
+      <button class="close-btn" (click)="closeSaveDialog()">✕</button>
+    </div>
+    
+    <div class="dialog-body">
+      <div *ngIf="saveSuccess" class="success-message">
+        ✅ {{ saveSuccess }}
+      </div>
+      
+      <div *ngIf="saveError" class="error-message">
+        ❌ {{ saveError }}
+      </div>
+      
+      <div class="form-group">
+        <label>Query Name *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="saveName" 
+          placeholder="e.g., messi_goals"
+          class="form-input"
+        />
+        <small>Use lowercase, underscores instead of spaces</small>
+      </div>
+      
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea 
+          [(ngModel)]="saveDescription" 
+          placeholder="What does this query do?"
+          rows="3"
+          class="form-input"
+        ></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Tags (comma-separated)</label>
+        <input 
+          type="text" 
+          [(ngModel)]="saveTags" 
+          placeholder="e.g., goals, messi, natural-language"
+          class="form-input"
+        />
+      </div>
+      
+      <div class="pipeline-preview">
+        <strong>Pipeline:</strong>
+        <pre>{{ result?.pipeline | json }}</pre>
+      </div>
+    </div>
+    
+    <div class="dialog-footer">
+      <button class="cancel-btn" (click)="closeSaveDialog()">Cancel</button>
+      <button class="save-btn" (click)="saveQuery()" [disabled]="!saveName.trim()">
+        💾 Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Detail Modal -->
+<div *ngIf="showEventDetail" class="modal-overlay" (click)="closeEventDetail()">
+  <div class="event-detail-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>📄 Event Details</h3>
+      <button class="close-btn" (click)="closeEventDetail()">✕</button>
+    </div>
+    
+    <div class="dialog-body">
+      <div class="event-summary">
+        <div *ngIf="selectedEvent?.type" class="summary-item">
+          <strong>Type:</strong> {{ selectedEvent.type.name }}
+        </div>
+        <div *ngIf="selectedEvent?.minute !== undefined" class="summary-item">
+          <strong>Minute:</strong> {{ selectedEvent.minute }}'
+        </div>
+        <div *ngIf="selectedEvent?.player" class="summary-item">
+          <strong>Player:</strong> {{ selectedEvent.player.name }}
+        </div>
+        <div *ngIf="selectedEvent?.team" class="summary-item">
+          <strong>Team:</strong> {{ selectedEvent.team.name }}
+        </div>
+      </div>
+      
+      <div class="json-viewer">
+        <div class="json-header">
+          <strong>Full Event JSON:</strong>
+          <button class="copy-json-btn" (click)="copyEventJson()" title="Copy to clipboard">
+            📋 Copy
+          </button>
+        </div>
+        <pre class="json-content">{{ getEventJson(selectedEvent) }}</pre>
+      </div>
+    </div>
+    
+    <div class="dialog-footer">
+      <button class="cancel-btn" (click)="closeEventDetail()">Close</button>
+    </div>
+  </div>
+</div>

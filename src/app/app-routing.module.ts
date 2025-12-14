@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { QueryExplorerComponent } from './components/query-explorer/query-explorer.component';
 import { LoginComponent } from './components/login/login.component';
 import { MyQueriesComponent } from './components/my-queries/my-queries.component';
+import { NaturalQueryComponent } from './components/natural-query/natural-query.component';
 import { CardShopComponent } from './components/betting/card-shop/card-shop.component';
 import { WalletComponent } from './components/betting/wallet/wallet.component';
 import { MyCardsComponent } from './components/betting/my-cards/my-cards.component';
@@ -25,6 +26,7 @@ const routes: Routes = [
       { path: '', redirectTo: 'login', pathMatch: 'full' },
       { path: 'login', component: LoginComponent },
       { path: 'queries', component: QueryExplorerComponent },
+      { path: 'natural-query', component: NaturalQueryComponent },
       { path: 'my-queries', component: MyQueriesComponent }
     ]
   },

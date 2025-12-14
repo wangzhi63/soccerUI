@@ -130,6 +130,13 @@
               ✓ Saved
             </span>
             <button 
+              class="btn btn-sm btn-danger me-2"
+              (click)="deleteQuery(selectedQuery.name)"
+              title="Delete this query"
+            >
+              🗑️ Delete
+            </button>
+            <button 
               class="btn btn-sm btn-outline-secondary"
               (click)="togglePipeline()"
             >
