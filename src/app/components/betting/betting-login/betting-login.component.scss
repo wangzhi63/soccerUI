@@ -1,0 +1,121 @@
+.container {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  color: white;
+  padding: 1.5rem;
+  border: none;
+
+  h3 {
+    margin: 0;
+    font-weight: 700;
+  }
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+// Divider
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  span {
+    padding: 0 1rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+// Social Login Buttons
+.social-login {
+  margin-top: 1.5rem;
+}
+
+.btn-google,
+.btn-apple {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #1f2937;
+  transition: all 0.3s ease;
+
+  .btn-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    border-color: #3b82f6;
+    background: #f9fafb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-apple {
+  background: #000;
+  color: white;
+  border-color: #000;
+
+  &:hover {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .col-12 {
+    max-width: 100%;
+  }
+}

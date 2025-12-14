@@ -64,8 +64,10 @@ export interface Bet {
   providedIn: 'root'
 })
 export class BettingService {
-  // Lambda API endpoint (use localhost:3000 for local development)
-  private apiUrl = 'https://crkgob67va.execute-api.us-east-1.amazonaws.com/Prod/api';
+  // Use localhost for development, Lambda for production
+  private apiUrl = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api'
+    : 'https://crkgob67va.execute-api.us-east-1.amazonaws.com/Prod/api';
   private walletBalanceSubject = new BehaviorSubject<WalletBalance | null>(null);
   public walletBalance$ = this.walletBalanceSubject.asObservable();
 
